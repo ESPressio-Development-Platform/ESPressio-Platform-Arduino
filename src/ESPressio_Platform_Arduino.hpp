@@ -20,3 +20,5 @@ using ProviderDeclaration = ESPressio::Platform::ProviderDeclaration<
     TRequirements>;
 
 } // namespace ESPressio::Platform::Arduino
+
+#include "ESPressio_Platform_ArduinoClock.hpp"
