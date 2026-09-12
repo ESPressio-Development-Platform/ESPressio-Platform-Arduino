@@ -29,3 +29,13 @@ The adapter deliberately exposes only behavior that is portable across Arduino c
 Some Arduino cores expose additional macros such as `INPUT_PULLDOWN` or `OUTPUT_OPEN_DRAIN`; the implementation can use those when present, but it does not advertise them as compile-time Platform guarantees because they are not part of the portable Arduino contract. The generic Arduino GPIO provider likewise does not claim interrupt support or bidirectional I/O.
 
 Multiple GPIO domains can coexist in one Platform composition; the default Arduino controller uses `GPIO::DefaultDomain` while external GPIO hardware can use its own domain tag.
+
+## ByteStream
+
+`Arduino::StreamByteStream<TStream, Tag>` is a non-owning adapter for Arduino Stream-like objects. It uses only the portable `available()`, `read()`, and `write(buffer, size)` surface and therefore works with `HardwareSerial`, network clients, files, or custom Stream-compatible types without imposing another inheritance hierarchy.
+
+Reads consume only bytes reported as immediately available and return an explicit transferred-byte count. Writes likewise report the count accepted by the underlying Arduino stream. The adapter does not claim non-blocking write behavior because that is not a portable guarantee of every Arduino Stream implementation.
+
+## Entropy
+
+The generic Arduino backend intentionally does not provide `Capability::Entropy`. Arduino's portable `random()` API is a pseudo-random generator and does not constitute a portable hardware-entropy guarantee. A board-specific or hardware-specific library may provide the Entropy contract independently in the same composition.
