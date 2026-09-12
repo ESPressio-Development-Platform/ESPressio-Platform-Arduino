@@ -22,3 +22,5 @@ using ProviderDeclaration = ESPressio::Platform::ProviderDeclaration<
 } // namespace ESPressio::Platform::Arduino
 
 #include "ESPressio_Platform_ArduinoClock.hpp"
+#include "ESPressio_Platform_ArduinoBus.hpp"
+#include "ESPressio_Platform_ArduinoGPIO.hpp"
