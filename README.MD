@@ -39,3 +39,9 @@ Reads consume only bytes reported as immediately available and return an explici
 ## Entropy
 
 The generic Arduino backend intentionally does not provide `Capability::Entropy`. Arduino's portable `random()` API is a pseudo-random generator and does not constitute a portable hardware-entropy guarantee. A board-specific or hardware-specific library may provide the Entropy contract independently in the same composition.
+
+## Synchronization and Queue
+
+The generic Arduino framework backend intentionally does not provide `Capability::Synchronization` or `Capability::Queue`. The portable Arduino API does not define deterministic mutex, signal, or bounded queue primitives with static resource guarantees.
+
+An Arduino-based firmware may compose the generic FreeRTOS Synchronization/Queue providers when its selected platform actually supplies FreeRTOS, or choose another backend/application-defined provider. This repository does not reach through Arduino into an underlying RTOS SDK because doing so would violate the backend boundary and make capability declarations board-core dependent.
