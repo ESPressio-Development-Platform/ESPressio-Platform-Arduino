@@ -8,17 +8,24 @@ Arduino providers may be composed alongside providers from FreeRTOS, ESP-IDF, ha
 
 ## Clock
 
-`Arduino::MicrosClock` is the first concrete provider.
+`Arduino::MicrosClock` is backed only by the portable Arduino `micros()` API. It provides `Capability::Clock` and `Capability::MonotonicClock`, with a 1 MHz tick scale and counter width derived from the selected Arduino core's actual `micros()` return type.
 
-It uses only the portable Arduino `micros()` API and provides:
+The provider intentionally does **not** publish `ClockResolutionNanoseconds`: Arduino cores may update `micros()` at a coarser platform-specific quantum. It also does not claim `InterruptReadableClock`, because ISR safety is not a portable Arduino guarantee.
 
-- `Capability::Clock`
-- `Capability::MonotonicClock`
-- `ClockFrequencyHz = 1,000,000`
-- `ClockCounterWidthBits` derived from the selected Arduino core's actual `micros()` return type
+## I2C
 
-The provider intentionally does **not** publish `ClockResolutionNanoseconds`. Although `micros()` reports values in microsecond units, Arduino cores may update that value at a coarser platform-specific quantum. Omitting the property prevents a consumer from accidentally treating unit scale as a guaranteed effective resolution.
+`Arduino::I2CDevice<Tag, Address, Frequency>` is a bound 7-bit I2C endpoint over `TwoWire`. Address and requested bus frequency are compile-time properties. The provider supports write, read, and repeated-START write/read operations without leaking `Wire` semantics into the generic Platform contract.
 
-It also does not claim `InterruptReadableClock`, because ISR safety is not a portable guarantee of the Arduino API contract across all supported cores.
+The adapter deliberately exposes only behavior that is portable across Arduino cores. Core-specific buffer capacities and implementation limits remain runtime/backend facts rather than being invented as universal Arduino guarantees.
 
-Counter wrap is explicit and is handled by `ESPressio::Platform::Clock::Elapsed()`.
+## SPI
+
+`Arduino::SPIDevice<Tag, Frequency, Mode, BitOrder>` is a bound SPI endpoint over `SPIClass`. It establishes an `SPISettings` transaction for each transfer and implements the generic full-duplex Platform transfer contract. Chip-select ownership is intentionally outside the minimum SPI contract so an application may use a composed GPIO provider or a future backend-specific CS extension.
+
+## GPIO
+
+`Arduino::GPIOController<DomainTag>` implements the generic digital GPIO contract with portable `pinMode`, `digitalRead`, and `digitalWrite` APIs. The generic provider statically advertises only portable pull-up support.
+
+Some Arduino cores expose additional macros such as `INPUT_PULLDOWN` or `OUTPUT_OPEN_DRAIN`; the implementation can use those when present, but it does not advertise them as compile-time Platform guarantees because they are not part of the portable Arduino contract. The generic Arduino GPIO provider likewise does not claim interrupt support or bidirectional I/O.
+
+Multiple GPIO domains can coexist in one Platform composition; the default Arduino controller uses `GPIO::DefaultDomain` while external GPIO hardware can use its own domain tag.
